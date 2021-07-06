@@ -111,6 +111,13 @@ describe('objectParser', () => {
     const parser = parserFromConfig({foo: box});
     expect(() => parser(42)).to.throw(/Expected.*object but was number/);
   });
+
+  it('provides context for child errors', () => {
+    const parser = parserFromConfig({foo: {bar: isString}});
+    expect(() => parser({foo: {bar: 42}})).to.throw(
+      /At foo.bar: Expected.*string but was number/
+    );
+  });
 });
 
 describe('arrayParser', () => {
@@ -157,6 +164,20 @@ describe('arrayParser', () => {
   it('throws an error when called on something other than an array', () => {
     const parser = parserFromConfig([box]);
     expect(() => parser({})).to.throw(/Expected.*array but was object/);
+  });
+
+  it('provides context for child errors', () => {
+    const parser = parserFromConfig([isNumber]);
+    expect(() => parser([1, 'a', 2])).to.throw(
+      /At \[1\]: Expected.*number but was string/
+    );
+  });
+
+  it('uses correct notation of object child errors', () => {
+    const parser = parserFromConfig({foo: [isNumber]});
+    expect(() => parser({foo: [1, 'a', 2]})).to.throw(
+      /At foo\[1\]: Expected.*number but was string/
+    );
   });
 });
 

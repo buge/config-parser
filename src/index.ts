@@ -125,6 +125,68 @@ export function parserFromConfig<C extends ParserConfig>(
   >;
 }
 
+/** Thrown when a parser encounters an error. */
+export class ParserError extends Error {
+  /** The path at which the error occurred. */
+  readonly path: ReadonlyArray<string>;
+
+  /**
+   * The original error thrown at a descendant node in the parse tree or simply
+   * `this` if this is the original error.
+   */
+  readonly original: Error;
+
+  constructor(
+    readonly error: string,
+    path?: ReadonlyArray<string>,
+    original?: Error
+  ) {
+    super(ParserError.joinPath(path) + error);
+    this.path = path || [];
+    this.original = original || this;
+  }
+
+  /**
+   * Returns a new ParserError with the given path prefix.
+   *
+   * @param prefix The location at which the error occurred.
+   * @param e The original error.
+   */
+  static withPrefix(prefix: string, e: Error): ParserError {
+    if (isParserError(e)) {
+      return new ParserError(e.error, [prefix, ...e.path], e.original);
+    }
+    return new ParserError(e.message, [prefix], e);
+  }
+
+  private static joinPath(path: ReadonlyArray<string> | undefined): string {
+    if (!path) {
+      return '';
+    }
+    return (
+      'At ' +
+      path.reduce((acc, x) => {
+        if (x.startsWith('[')) {
+          return `${acc}${x}`;
+        }
+        return `${acc}.${x}`;
+      }) +
+      ': '
+    );
+  }
+}
+
+/** Returns whether the given object is a ParserError. */
+export function isParserError(e: unknown): e is ParserError {
+  const parserError = e as ParserError;
+  return (
+    parserError instanceof Error &&
+    parserError.error !== undefined &&
+    parserError.path !== undefined &&
+    parserError.original !== undefined
+  );
+}
+
 function isUndefined<T>(x: T | undefined | null): x is T {
   if (typeof x === 'boolean' || typeof x === 'number') {
     return false;
@@ -162,7 +224,11 @@ function objectParser<C extends ObjectParserConfig>(
 
     const ret: {[key: string]: unknown} = {};
     for (const [key, parser] of Object.entries(parsers)) {
-      ret[key] = parser((x as {[key: string]: unknown})[key]);
+      try {
+        ret[key] = parser((x as {[key: string]: unknown})[key]);
+      } catch (e) {
+        throw ParserError.withPrefix(key, e);
+      }
     }
     return ret as ObjectParserConfigReturnType<C>;
   };
@@ -184,6 +250,12 @@ function arrayParser<T>(parser: Parser<T>): Parser<ReadonlyArray<T>> {
       );
     }
 
-    return x.map(parser);
+    return x.map((x, i) => {
+      try {
+        return parser(x);
+      } catch (e) {
+        throw ParserError.withPrefix(`[${i}]`, e);
+      }
+    });
   };
 }
