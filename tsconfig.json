@@ -4,6 +4,7 @@
     "strict": true,
     "esModuleInterop": true,
     "sourceMap": true,
+    "declaration": true,
     "outDir": "build",
     "resolveJsonModule": true,
     "downlevelIteration": true,
