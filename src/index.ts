@@ -84,12 +84,26 @@ export const optionalBoolean = optional(isBoolean);
  */
 export function optional<C extends ParserConfig>(
   config: C
+): Parser<ParserConfigReturnType<C> | undefined>;
+
+/**
+ * Returns a parser that returns the default value if the value being parsed is
+ * `undefined`, `null`, `[]` or `{}`. Calls the parser on the value otherwise.
+ */
+export function optional<C extends ParserConfig>(
+  config: C,
+  def: ParserConfigReturnType<C>
+): Parser<ParserConfigReturnType<C>>;
+
+export function optional<C extends ParserConfig>(
+  config: C,
+  def?: ParserConfigReturnType<C>
 ): Parser<ParserConfigReturnType<C> | undefined> {
   const childParser = parserFromConfig(config);
 
   return (x: unknown) => {
     if (isUndefined(x)) {
-      return undefined;
+      return def === undefined ? undefined : def;
     }
     return childParser(x);
   };

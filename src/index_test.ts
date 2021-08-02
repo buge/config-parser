@@ -40,8 +40,16 @@ describe('optional', () => {
     expect(optional(box)(undefined)).to.be.undefined;
   });
 
+  it('returns the default value when specified for undefined', () => {
+    expect(optional(box, [42])(undefined)).to.deep.equal([42]);
+  });
+
   it('returns undefined for the empty string', () => {
     expect(optional(box)('')).to.be.undefined;
+  });
+
+  it('returns the default value when specified for the empty string', () => {
+    expect(optional(box, [42])('')).to.deep.equal([42]);
   });
 
   it('calls the parser when the value is false', () => {
@@ -196,6 +204,17 @@ describe('ParserConfigReturnType', () => {
   it('returns the correct type for an optional parser', () => {
     const parser = parserFromConfig(optional(isNumber));
     type Expected = number | undefined;
+
+    type Actual = ParserConfigReturnType<typeof parser>;
+    /* eslint-disable @typescript-eslint/no-unused-vars */
+    const r1: Actual extends Expected ? true : never = true;
+    const r2: Expected extends Actual ? true : never = true;
+    /* eslint-enable @typescript-eslint/no-unused-vars */
+  });
+
+  it('returns the correct type for an optional argument with default value', () => {
+    const parser = parserFromConfig(optional(isNumber, 42));
+    type Expected = number;
 
     type Actual = ParserConfigReturnType<typeof parser>;
     /* eslint-disable @typescript-eslint/no-unused-vars */
