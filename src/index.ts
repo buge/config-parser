@@ -227,6 +227,8 @@ function objectParser<C extends ObjectParserConfig>(
     parsers[key] = parserFromConfig(parser);
   }
 
+  const parserEntries = Object.entries(parsers);
+
   return (x: unknown) => {
     if (x === null) {
       throw Error('Expected value to be an object but was null');
@@ -237,7 +239,7 @@ function objectParser<C extends ObjectParserConfig>(
     }
 
     const ret: {[key: string]: unknown} = {};
-    for (const [key, parser] of Object.entries(parsers)) {
+    for (const [key, parser] of parserEntries) {
       try {
         ret[key] = parser((x as {[key: string]: unknown})[key]);
       } catch (e) {
