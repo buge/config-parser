@@ -1,6 +1,8 @@
 import {
   ParserConfigReturnType,
+  ParserError,
   isNumber,
+  isParserError,
   isString,
   optional,
   parserFromConfig,
@@ -320,5 +322,34 @@ describe('ParserConfigReturnType', () => {
     const r1: Actual extends Expected ? true : never = true;
     const r2: Expected extends Actual ? true : never = true;
     /* eslint-enable @typescript-eslint/no-unused-vars */
+  });
+});
+
+describe('isParserError', () => {
+  it('returns true for ParserError', () => {
+    const error = new ParserError('error message');
+    expect(isParserError(error)).to.be.true;
+  });
+
+  it('returns false for generic Error', () => {
+    const error = new Error('error message');
+    expect(isParserError(error)).to.be.false;
+  });
+
+  it('returns false for an object that looks like a ParserError but is not an Error instance', () => {
+    const fakeError = {
+      error: 'error message',
+      path: [],
+      original: new Error('original error'),
+    };
+    expect(isParserError(fakeError)).to.be.false;
+  });
+
+  it('returns false for other types', () => {
+    expect(isParserError('string')).to.be.false;
+    expect(isParserError(42)).to.be.false;
+    expect(isParserError({})).to.be.false;
+    expect(isParserError(null)).to.be.false;
+    expect(isParserError(undefined)).to.be.false;
   });
 });
