@@ -243,11 +243,16 @@ function objectParser<C extends ObjectParserConfig>(
       try {
         ret[key] = parser((x as {[key: string]: unknown})[key]);
       } catch (e) {
-        throw ParserError.withPrefix(key, e);
+        throw ParserError.withPrefix(key, toError(e));
       }
     }
     return ret as ObjectParserConfigReturnType<C>;
   };
+}
+
+/** Coerces a caught value into an `Error`. */
+function toError(e: unknown): Error {
+  return e instanceof Error ? e : new Error(String(e));
 }
 
 function arrayParser<T>(parser: Parser<T>): Parser<ReadonlyArray<T>> {
@@ -270,7 +275,7 @@ function arrayParser<T>(parser: Parser<T>): Parser<ReadonlyArray<T>> {
       try {
         return parser(x);
       } catch (e) {
-        throw ParserError.withPrefix(`[${i}]`, e);
+        throw ParserError.withPrefix(`[${i}]`, toError(e));
       }
     });
   };

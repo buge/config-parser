@@ -9,12 +9,18 @@
     "url": "git+https://github.com/buge/config-parser.git"
   },
   "homepage": "https://github.com/buge/config-parser#readme",
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "files": [
+    "build"
+  ],
   "scripts": {
     "build": "tsc",
     "fix": "prettier --config .prettierrc 'src/**/*.ts' 'test/**/*.ts' --write && eslint --fix src/ test/",
     "lint": "eslint",
     "test": "mocha -r ts-node/register 'src/**/*_test.ts'",
-    "clean": "rm -rf build"
+    "clean": "rm -rf build",
+    "prepare": "npm run build"
   },
   "devDependencies": {
     "@types/chai": "^4.2.16",
